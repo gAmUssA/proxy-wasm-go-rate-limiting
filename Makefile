@@ -15,3 +15,7 @@ fmt:
 
 clean:
 	rm rate-limiting.wasm
+
+test: rate-limiting.wasm
+	$(GO) test -v ./...
+	

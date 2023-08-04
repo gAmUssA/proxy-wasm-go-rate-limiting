@@ -75,7 +75,7 @@ func (*VMContext) NewPluginContext(vmID uint32) types.PluginContext {
 		"month":  2592000,
 		"year":   31536000,
 	}
-	
+
 	time.LoadLocation("")
 
 	xRateLimitLimit = make(map[string]string)
@@ -97,7 +97,7 @@ func (*VMContext) NewPluginContext(vmID uint32) types.PluginContext {
 
 type PluginContext struct {
 	types.DefaultPluginContext
-	conf config.Config
+	conf   config.Config
 	limits map[string]int64
 }
 
@@ -128,9 +128,9 @@ func (ctx *PluginContext) OnPluginStart(confSize int) types.OnPluginStartStatus 
 
 func (ctx *PluginContext) NewHttpContext(pluginID uint32) types.HttpContext {
 	return &RateLimitingContext{
-		conf: &ctx.conf,
-		limits: &ctx.limits,
-		routeId: getProperty("kong", "route_id"),
+		conf:      &ctx.conf,
+		limits:    &ctx.limits,
+		routeId:   getProperty("kong", "route_id"),
 		serviceId: getProperty("kong", "service_id"),
 	}
 }
@@ -141,11 +141,11 @@ func (ctx *PluginContext) NewHttpContext(pluginID uint32) types.HttpContext {
 
 type RateLimitingContext struct {
 	types.DefaultHttpContext
-	conf *config.Config
-	limits *map[string]int64
-	routeId string
+	conf      *config.Config
+	limits    *map[string]int64
+	routeId   string
 	serviceId string
-	headers map[string]string
+	headers   map[string]string
 }
 
 func getForwardedIp() string {
@@ -326,7 +326,7 @@ func processUsage(ctx *RateLimitingContext, counters map[string]Usage, stop stri
 		}
 		return types.ActionPause
 	}
-	
+
 	if headers != nil {
 		ctx.headers = headers
 	}
@@ -367,14 +367,9 @@ func (ctx *RateLimitingContext) OnHttpResponseHeaders(numHeaders int, eof bool) 
 		return types.ActionContinue
 	}
 	if ctx.headers != nil {
-		pairs, err := proxywasm.GetHttpResponseHeaders()
-		if err != nil {
-			panic(err)
-		}
 		for k, v := range ctx.headers {
-			pairs = append(pairs, [2]string{k, v})
+			proxywasm.AddHttpResponseHeader(k, v)
 		}
-		proxywasm.ReplaceHttpResponseHeaders(pairs)
 	}
 
 	return types.ActionContinue
